@@ -1,0 +1,99 @@
+version: "2.4"
+services: 
+  data-auth:
+    container_name: data-auth
+    image: mongo
+    volumes: 
+      - ./data-auth:/data/db
+    ports: 
+      - "27018:27017"
+    networks: 
+      - service-network
+  
+  data-todo:
+    container_name: data-todo
+    image: mongo
+    volumes:
+      - ./data-todo:/data/db
+    ports: 
+      - "27019:27017"
+    networks: 
+      - service-network
+
+  data-redis:
+    container_name: data-redis
+    image: redis
+    volumes:
+      - ./data-redis:/data
+    ports:
+      - "6379:6379"
+    networks: 
+      - service-network
+    
+  service-auth:
+    container_name: service-auth
+    build: 
+      context: ./service-auth
+    volumes: 
+      - ./service-auth:/app
+    ports: 
+      - "3001:3000"
+    networks: 
+      - service-network
+    environment: 
+      - TOKEN_SECRET=abcdcba1234321
+    mem_limit: "512M"
+    cpus: 0.1
+
+  service-todo:
+    container_name: service-todo
+    build: 
+      context: ./service-todo
+    volumes:
+      - ./service-todo:/app
+    ports:
+      - "3002:3000"
+    networks: 
+      - service-network
+    mem_limit: "512M"
+    cpus: 0.1
+  
+  service-gateway:
+    container_name: service-gateway
+    build:
+      context: ./service-gateway
+    volumes: 
+      - ./service-gateway:/app
+    ports:
+      - "3000:3000"
+    networks: 
+      - service-network
+    environment: 
+      - TOKEN_SECRET=abcdcba1234321
+    mem_limit: "512M"
+    cpus: 0.1
+  
+  nginx:
+    container_name: service-nginx
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - service-network
+
+  client:
+    container_name: service-client
+    build:
+      context: ./client
+    volumes: 
+      - ./client:/app
+    ports:
+      - "8888:3000"
+    networks:
+      - service-network
+  
+networks:
+  service-network:
+    driver: bridge
+    
